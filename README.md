@@ -18,9 +18,12 @@ File structure:
 The bot is designed with the following file structure in mind:
 
 Root
-| - Image directory
-    | - People
+| - Image directory 
+
+    | - People 
+    
       | - Subfolders of images
+      
 | - Text directory
 
 With the image directory containing several subfolders of folders of images. At the moment the bot is written with .jpg files in mind.
