@@ -65,7 +65,7 @@ photo_help = ", ".join(photo_help)
 
 ##Link text commands with files, format [command, text file name] 
 text_command = np.array([
-    ["!converse","conversation_starters"],
+    #eg.["!converse","conversation_starters"] will pull a random line from the file named "conversation_starters.txt" in the Text directory,
     ])
     
 ##Generate help list of commands
