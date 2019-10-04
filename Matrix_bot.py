@@ -1,16 +1,5 @@
 #!/usr/bin/env python3
 
-# A simple chat client for matrix.
-# This sample will allow you to connect to a room, and send/recieve messages.
-# Args: host:port username password room
-# Error Codes:
-# 1 - Unknown problem has occured
-# 2 - Could not find the server.
-# 3 - Bad URL Format.
-# 4 - Bad username/password.
-# 11 - Wrong room format.
-# 12 - Couldn't find room.
-
 import os
 import sys
 import samples_common  # Common bits used between samples
@@ -79,11 +68,6 @@ def on_message(room, event):
     if event['type'] == "m.room.message":
         if event['content']['msgtype'] == "m.text":
             
-            #Posts "Pub." in reply to "Pub?"
-            #if "Pub? " or "pub? " in event['content']['body']:
-            #    room.send_text("Pub.")
-                
-            ##
             ##Posts  image on command "!photo"
             if "!photo " in event['content']['body'] and not event['sender']==bot:
                 print("!photo detected")
