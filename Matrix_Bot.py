@@ -280,4 +280,4 @@ if __name__ == '__main__':
     
     
     
-    main(host, username, password,room_id_alias) #"!pviFPaUsGqDkxYujSa:matrix.org") #"!yZspvMlFzSmvYZDNoE:matrix.org")
+    main(host, username, password,room_id_alias) 
