@@ -1,5 +1,16 @@
 #!/usr/bin/env python3
 
+# A simple chat client for matrix.
+# This sample will allow you to connect to a room, and send/recieve messages.
+# Args: host:port username password room
+# Error Codes:
+# 1 - Unknown problem has occured
+# 2 - Could not find the server.
+# 3 - Bad URL Format.
+# 4 - Bad username/password.
+# 11 - Wrong room format.
+# 12 - Couldn't find room.
+
 import os
 import sys
 import samples_common  # Common bits used between samples
@@ -8,6 +19,7 @@ import random
 import numpy as np
 import pickle
 import time
+import configparser
 from numpy.random import choice
 
 
@@ -15,72 +27,58 @@ from matrix_client.client import MatrixClient
 from matrix_client.api import MatrixRequestError
 from requests.exceptions import MissingSchema
 
-Global_directory = "Your root directory"
-Image_directory = os.path.join(Global_directory,"Images")
-Text_directory = os.path.join(Global_directory,"Textfiles/")
-
-image_list_file = os.path.join(Image_directory,"images.txt")
+config = configparser.ConfigParser()
+config.read('Matrix_Bot.ini')
 
 
-##Bot setup - insert token here, and add host, username, password and chat room id to the bottome line of this code
-token = "your matrix.org token here"
-
-bot = "@username:matrix.org"
-
-client = MatrixClient("Host server e.g. https://matrix.org",token, bot)
-
-
+##Bot setup - edit Matrix_Bot.ini
 
 ##Generate array of names of people in photos, directory and keywords
-name_list = []
-keywords = []
-directory = os.path.join(Image_directory,"People/")
-folder_list = [x[0] for x in os.walk(directory)]
-del folder_list[0]
-for i in folder_list:
-    name = os.path.split(i)[1]
-    name_list.append(name)
-for i in name_list:
-    keywords.append(str.join("",("!photo ", i)))
-name_array = np.column_stack((name_list,folder_list,keywords))
+def name_array_gen(config):
+    name_list = []
+    keywords = []
+    directory = config["DIRECTORY"]["people"]
+    folder_list = [x[0] for x in os.walk(directory)]
+    del folder_list[0]
+    for i in folder_list:
+        name = os.path.split(i)[1]
+        name_list.append(name)
+    for i in name_list:
+        keywords.append(str.join("",("!photo ", i)))
+    name_array = np.column_stack((name_list,folder_list,keywords))
+    return(name_array)
 
 ##Generate !photo helpfile
-photo_help = ["The !photo command currently supports the following arguments: any"] 
-photo_help.extend(name_list)
-photo_help = ", ".join(photo_help)
-    
-##Generate general helpfile
+def help_file_gen(name_list):
+    photo_help = "The !photo command currently supports the following arguments: any" 
+    for i in range(len(name_list)):
+        photo_help = photo_help+", "+name_list[i][2]
+    return(photo_help)
 
 
-##Link text commands with files, format [command, text file name] 
-text_command = np.array([
-    #eg.["!converse","conversation_starters"] will pull a random line from the file named "conversation_starters.txt" in the Text directory,
-    ])
-    
-##Generate help list of commands
-text_command_help = []
 
 
-print("Started")
+
 # Called when a message is recieved.
 def on_message(room, event):
     #print("message received")
     if event['type'] == "m.room.message":
         if event['content']['msgtype'] == "m.text":
             
-            ##Posts  image on command "!photo"
-            if "!photo " in event['content']['body'] and not event['sender']==bot:
+            ##
+            ##Posts image on command "!photo"
+            if "!photo " in event['content']['body'] and not event['sender']==config["BOTINFO"]["bot_sender"]:
                 print("!photo detected")
-                selected = [i for i in keywords if i in event['content']['body']]
+                selected = [i for i in name_array[:,2] if i in event['content']['body']]
                 
                 if "!photo help" in event['content']['body']:
                     #Show help mesage with list of commands
                     room.send_text(photo_help)
                     
-
+                    
                 elif "!photo any" in event['content']['body']:
                     #Send random picture
-                    directory = os.path.join(Image_directory,"People/")
+                    directory = config["DIRECTORY"]["people"]
                     post_random_image_dir(directory, "Random image", room)     
                     
                     
@@ -99,22 +97,19 @@ def on_message(room, event):
             
             
             ##Samples line from textfile
-            if any(com in event['content']['body'] for com in text_command[:,0]):                           #Checks if command is in message
-                for i in text_command[:,0]:                                                                 #Finds location of the text command and what it refers to
-                    if i in event['content']['body']:
-                        text_list = np.array(text_command[:,0]).tolist()
-                        k = text_list.index(i)
-                        text_in = text_command[k,1]
-                        line_select(text_in,room)
+            for key in config["TEXT_COMMANDS"]:
+                if key in event['content']['body']:
+                    print(key)
+                    line_select(config["TEXT_COMMANDS"][key],room)
                 
-           
+
             
             
-         
+            
         #Stores mxc url for all images sent to group by other users
         elif event['content']['msgtype'] == "m.image":
             print("{0}: {1}".format(event['sender'], event['content']['url']))
-            image_list = open(image_list_file, "a")
+            image_list = open(config["FILE"]["image_list"], "a")
             image_list.write(event['content']['url']+"\n")
             image_list.close()
 
@@ -146,6 +141,7 @@ def post_random_image_dir(input_directory, text, room):
 
 ##Select an image based on the people you want in it and with a weighting
 def weighted_image(names_given,text,room):
+    directory = config["DIRECTORY"]["people"]
     with open(os.path.join(directory,"output.txt"),"rb") as infile:
         data_in = pickle.load(infile)
 
@@ -187,6 +183,7 @@ def weighted_image(names_given,text,room):
 
 
 def line_select(file,room):
+    Text_directory = config["DIRECTORY"]["text"]
     pickle_file = os.path.join(Text_directory,file+".pickle")
     text_file = os.path.join(Text_directory,file+".txt")
     with open(pickle_file,"rb") as infile:
@@ -200,7 +197,7 @@ def line_select(file,room):
     print(weight)
     with open(pickle_file,"wb") as outfile:
         pickle.dump(weight,outfile)
-    
+    print(draw)
     room.send_text(draw)
 
 
@@ -260,11 +257,27 @@ def main(host, username, password, room_id_alias):
             
 if __name__ == '__main__':
     logging.basicConfig(level=logging.WARNING)
+    print("Started")
     #host, username, password = samples_common.get_user_details(sys.argv)
 
     #if len(sys.argv) > 4:
         #room_id_alias = sys.argv[4]
     #else:
         #room_id_alias = samples_common.get_input("Room ID/Alias: ")
-
-    main("Host eg. https://matrix.org", "username", "password","room_name:matrix.org") 
+    
+    host = config["BOTINFO"]["host"]
+    username = config["BOTINFO"]["username"]
+    password = config["BOTINFO"]["password"]
+    room_id_alias = config["BOTINFO"]["room_id_alias"]
+    bot_sender = config["BOTINFO"]["bot_sender"]
+    token = config["BOTINFO"]["token"]
+    
+    client = MatrixClient(host,token,bot_sender)
+    
+    name_array = name_array_gen(config)
+    photo_help = help_file_gen(name_array)
+    
+    
+    
+    
+    main(host, username, password,room_id_alias) 
