@@ -3,6 +3,8 @@ A python3 bot for use with matrix.org clients
 
 Requires matrix-python-sdk which can be found at https://github.com/matrix-org/matrix-python-sdk
 
+
+
 Main features:
 
 - Send random lines from a textfile
@@ -14,6 +16,12 @@ Main features:
 
 Setup:
 
+Docker file available with:
+```bash
+sudo docker pull steelman2712/matrix_bot:latest
+sudo docker run -v [Location of data on host]:/mnt/matrix_bot matrix_bot
+```
+
 File structure:
 The bot is designed with the following file structure in mind:
 
@@ -22,6 +30,8 @@ The bot is designed with the following file structure in mind:
             | - People 
                 | - Subfolders of images 
         | - Text directory
+        | - Config (Config files must be in a this folder relative to mount point for docker images)
+
 
 With the image directory containing several subfolders of folders of images. At the moment the bot is written with .jpg files in mind.
 
