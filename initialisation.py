@@ -71,7 +71,7 @@ def SQLTextList(directory):
 if __name__ == "__main__":
     
     config = configparser.ConfigParser()
-    config.read('/home/***REMOVED***/code/matrix-python-sdk/test_zone/Matrix_Bot.ini')
+    config.read('/mnt/Matrix_Bot.ini')
 
     Image_directory = config["DIRECTORY"]["people"]
     Text_directory = config["DIRECTORY"]["text"]
