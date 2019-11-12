@@ -13,7 +13,7 @@ A python3 bot for use with matrix.org clients
 Pull from Docker via:
 ```bash
 sudo docker pull steelman2712/matrix_bot:latest
-sudo docker run -v [Location of data on host]:/mnt/ matrix_bot
+sudo docker run -ti -v [Location of data on host]:/mnt/ matrix_bot
 ```
 This should pull the docker platform relevant to your platform and run it. The config file and folder structure should be generated, as well as a sample function.
 
