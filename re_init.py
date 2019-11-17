@@ -24,6 +24,7 @@ def SQLImageList(directory):
     
     conn = sqlite3.connect(os.path.join(directory,"images.db"))
     c = conn.cursor()
+    c.execute('CREATE TABLE IF NOT EXISTS images (image_name VARCHAR, image_location VARCHAR, names VARCHAR, weights NUM, UNIQUE(image_name))')
     for i in range(len(image_name_list)):
         name_list[i].sort()
         people_string = "%".join(name_list[i])
@@ -44,6 +45,7 @@ def SQLTextList(directory):
             if text.endswith(".txt"):
                 in_file = open(os.path.join(directory,text))
                 in_file_list = list(in_file)
+                print(in_file_list)
                 number_of_lines = len(in_file_list)
                 out_name = text.split(".")
                 file_name = out_name[0]
@@ -53,8 +55,11 @@ def SQLTextList(directory):
                 conn = sqlite3.connect(out_name)
                 c = conn.cursor()
                 print(file_name)
+                c.execute("create table if not exists table_text (text VARCHAR, weights NUM,UNIQUE(text))")
                 for i in range(number_of_lines):
+                    print(i)
                     line_to_write = in_file_list[i].rstrip()
+                    print(line_to_write)
                     c.execute('INSERT OR IGNORE INTO table_text (text, weights) values (?,?)', (line_to_write,100))
                 conn.commit()
                 conn.close()

@@ -20,7 +20,7 @@ from matrix_bot_api.mregex_handler import MRegexHandler
 from matrix_bot_api.mcommand_handler import MCommandHandler
 
 ##Bot setup - edit Matrix_Bot.ini
-if not os.path.exists("/mnt/Matrix_Bot.ini"):
+if not os.path.exists('/mnt/Matrix_Bot.ini'):
     first_setup.setup()
     print("Initial setup complete. There should now be a .ini file in the root of the folder you mounted. Add the credentials of your bot account and any command setup you want to do in that file. Add you images into subfolders in the /Images/People folder (a pair of example subfolders have been added) and any textfiles to /Resources/Textfiles. Re-run the docker container once you've done that and it should hopefully work.")
     exit()
@@ -68,14 +68,27 @@ def name_array_gen(config):
     name_array = [name_list,folder_list,keywords]
     return(name_array)
 
+
 ##Generate !photo helpfile
-def help_file_gen(name_list):
+def photo_help_file_gen(name_list):
     photo_help = "The !photo command currently supports the following arguments: any" 
     for i in name_list:
         photo_help = photo_help+", "+i
     print("Photo help to be shown when called: "+photo_help)
     return(photo_help)
 
+
+#Generate overall helpfile
+def help_file_gen(photo_help):
+    help_string = "The bot currently takes the following commands: \nCommand:  What the command does \n "
+    help_dict = dict(config.items("HELP"))
+    for key,value in help_dict.items():
+        help_string = help_string + "!"+key+":  " +value+"\n "
+    help_string = help_string + "\n" + photo_help
+    print(help_string)
+    return(help_string)
+    
+    
 #SQL custom functions
 def log(number):
     return math.log(number)
@@ -89,12 +102,15 @@ def rand():
 
 ##Posts selected image
 def post_image(image_file, text, room):
-    with open(image_file, "rb") as image:
-        f = image.read()
-        b = bytearray(f)
-        a = client.upload(b,"image/jpeg")
-        room.send_image(a, text)
-        
+    try:
+        with open(image_file, "rb") as image:
+            f = image.read()
+            b = bytearray(f)
+            a = client.upload(b,"image/jpeg")
+            room.send_image(a, text)
+    except:
+        print("Could not post image")
+    
 def post_random_image(input_directory, text, room):
     image_selected = random.choice(os.listdir(input_directory))
     image_to_send = os.path.join(input_directory,image_selected)
@@ -120,6 +136,7 @@ def weighted_image(names_given,text,room):
     people_string = "% "+people_string+" %"
     db_in = os.path.join(directory,"images.db")
     con = sqlite3.connect(db_in)
+    print("Checking database...")
     c = con.cursor()
     con.create_function("log",1,log)
     con.create_function("rand",0,rand)
@@ -128,6 +145,7 @@ def weighted_image(names_given,text,room):
         to_send = c.fetchall()[0]
         image_to_send = to_send[0]
         people_in_image = "Image containing: "+to_send[1]
+        print(people_in_image)
         c.execute("update images set weights = weights*0.05 where image_location = ?", (image_to_send,))
         post_image(image_to_send, people_in_image, room)
     except:
@@ -168,7 +186,7 @@ def photo_callback(room,event):
         if "!photo help" in event['content']['body']:
             #Show help mesage with list of commands
             room.send_text(photo_help)
-            
+            print("Photo help message sent")
             
         elif "!photo any" in event['content']['body']:
             #Send random picture
@@ -180,12 +198,15 @@ def photo_callback(room,event):
             input_text = event['content']['body']
             input_text = input_text.split(" ")
             del(input_text[0])
-            print(input_text)
-            names_given = input_text
-            names_text = ", ".join(names_given[:-1])
-            text = str.join(" ", ("Image of", names_text))
-            text = str.join(" ", (text,names_given[-1]))
-            weighted_image(names_given,text,room)
+            if input_text != []:
+                print(input_text)
+                names_given = input_text
+                names_text = ", ".join(names_given[:-1])
+                text = str.join(" ", ("Image of", names_text))
+                text = str.join(" ", (text,names_given[-1]))
+                weighted_image(names_given,text,room)
+            else:
+                print("Please add valid command after !photo")
             #room.send_text("Name not currently in database")
     except:
         print("Unable to send image")
@@ -207,17 +228,26 @@ def text_callback(room,event):
 def reinit(room,event):
     try:
         Image_directory = config["DIRECTORY"]["people"]
-        Text_directory = config["DIRECTORY"]["text"] 
-        
         re_init.SQLImageList(Image_directory)
-        re_init.SQLTextList(Text_directory)
+        print("Image database refreshed")
+        room.send_text("Image database refreshed")
+        
     except:
-        print("Database refresh failed")
-        room.send_text("Database refresh failed")
+        print("Image Database refresh failed")
+        room.send_text("Image Database refresh failed")
+    try:
+        Text_directory = config["DIRECTORY"]["text"] 
+        re_init.SQLTextList(Text_directory)
+        print("Text databases refreshed")
+        room.send_text("Text databases refreshed")
+    except:
+        print("Text Database refresh failed")
+        room.send_text("Text Database refresh failed")
 
 
-
-
+def helpfile_callback(room,event):
+    print("Sending helpfile")
+    room.send_text(help_file)
                 
 def main():
     # Create an instance of the MatrixBotAPI
@@ -229,7 +259,13 @@ def main():
         
     photo_handler = MCommandHandler("photo", photo_callback)
     bot.add_handler(photo_handler)
-
+    
+    reinit_handler = MCommandHandler("reinit", reinit)
+    bot.add_handler(reinit_handler)
+    
+    helpfile_handler = MCommandHandler("help",helpfile_callback)
+    bot.add_handler(helpfile_handler)
+    
     # Start polling
     bot.start_polling()
     print("Polling started")
@@ -252,7 +288,8 @@ if __name__ == "__main__":
         print("Initialisation complete")
     
     name_array = name_array_gen(config)
-    photo_help = help_file_gen(name_array[0])
+    photo_help = photo_help_file_gen(name_array[0])
+    help_file = help_file_gen(photo_help)
     
     host = config["BOTINFO"]["host"]
     username = config["BOTINFO"]["username"]
