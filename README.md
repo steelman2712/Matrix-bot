@@ -1,5 +1,5 @@
 # Matrix-bot
-A python3 bot for use with matrix.org clients
+A python3 bot for use with matrix.org clients - Google Photos integration in proress
 
 
 # Main features:
