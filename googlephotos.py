@@ -33,14 +33,12 @@ class gphotos:
             media = media+media_temp
         return(media)
     ##Gets photo url from id
-    def getGooglePhoto(self,photo_id):
+    def getGooglePhoto(self,photo_id,filename):
         photo_get = self.service.mediaItems().get(mediaItemId=photo_id).execute()
         max_width = 1920
         max_height = 1080
         base_url = photo_get['baseUrl']+"=w"+str(max_width)+"-h"+str(max_height)
-        print(base_url)
-        local_file = wget.download(base_url, out="local_file.jpg")
-        local_file
+        wget.download(base_url, out=filename)
 
     def albumScrape(self):
         results = self.service.albums().list().execute()
