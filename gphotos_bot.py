@@ -45,7 +45,6 @@ def rand():
 ##Posts selected image
 def post_image(image_file, text, room):
     service.getGooglePhoto(image_file,"temp")
-    print(image_file)
     try:
         with open("temp", "rb") as image:
             f = image.read()
