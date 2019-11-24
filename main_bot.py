@@ -195,16 +195,10 @@ def photo_callback(room,event):
             
             
         else:
-            input_text = event['content']['body']
-            input_text = input_text.split(" ")
-            del(input_text[0])
-            if input_text != []:
-                print(input_text)
-                names_given = input_text
-                names_text = ", ".join(names_given[:-1])
-                text = str.join(" ", ("Image of", names_text))
-                text = str.join(" ", (text,names_given[-1]))
-                weighted_image(names_given,text,room)
+            if selected != []:
+                text = str.join(" ", ("Image of", selected))
+                text = str.join(" ", (text,selected))
+                weighted_image(selected,text,room)
             else:
                 print("Please add valid command after !photo")
             #room.send_text("Name not currently in database")
@@ -270,7 +264,6 @@ def main():
     bot.start_polling()
     print("Polling started")
 
-    # Infinitely read stdin to stall main thread while the bot runs in other threads
     while True:
         input()
 
