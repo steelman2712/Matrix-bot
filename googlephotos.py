@@ -46,7 +46,18 @@ class gphotos:
             for i in results["albums"]:
                 outfile.write(i["title"]+"\n")
 
-
+    #Write album list to end of config file 
+    def albumConfigWrite(self):
+        self.albumScrape()
+        line_out = []
+        with open("albums.txt","r+") as infile:
+            for i in infile.read().splitlines():
+                line_out.append(i + " = " + i)
+        print(line_out)
+        with open("Matrix_Bot.ini","a") as configfile:
+            configfile.write("[GOOGLE_ALBUMS]\n")
+            for i in line_out:
+                configfile.write(i+"\n")
 
 ##Generate local database
 def SQLImageList(directory,media,person_name):
@@ -77,16 +88,7 @@ def SQLImageList(directory,media,person_name):
 
 
 
-#Write album list to end of config file 
-def albumConfigWrite():
-    line_out = []
-    with open("albums.txt","r+") as infile:
-        for i in infile.read().splitlines():
-            line_out.append(i + " = " + i)
-    print(line_out)
-    with open("Matrix_Bot.ini","a") as configfile:
-        for i in line_out:
-            configfile.write(i+"\n")
+
 
 if __name__ == "__main__":
     SCOPES = 'https://www.googleapis.com/auth/photoslibrary.readonly'

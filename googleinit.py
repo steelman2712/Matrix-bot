@@ -15,9 +15,6 @@ config_file = '/mnt/Matrix_Bot.ini'
 config = configparser.ConfigParser()
 config.read(config_file)
 
-
-
-
 SCOPES = 'https://www.googleapis.com/auth/photoslibrary.readonly'
 store = file.Storage('credentials.json')
 creds = store.get()

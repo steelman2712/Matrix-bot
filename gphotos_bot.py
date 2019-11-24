@@ -23,7 +23,7 @@ from matrix_bot_api.mcommand_handler import MCommandHandler
 
 
 ##Bot setup - edit Matrix_Bot.ini
-root_dir = '/home/reynolds/code/Matrix Bot testzone/'
+root_dir = '/mnt/'
 config_file = os.path.join(root_dir,'Matrix_Bot.ini')
 config = configparser.ConfigParser()
 config.read(config_file)
@@ -48,7 +48,7 @@ def text_init_check():
     return all(existence_list)
 
 def init_check():
-    return image_init_check(root_folder) and text_init_check()
+    return image_init_check(root_dir) and text_init_check()
 
 ##Generate !photo helpfile
 def photo_help_file_gen(name_list):
@@ -227,11 +227,19 @@ if __name__ == "__main__":
         flow = client.flow_from_clientsecrets(os.path.join('client_secret.json'), SCOPES)
         creds = tools.run_flow(flow, store)
     service = build('photoslibrary', 'v1', http=creds.authorize(Http()))
-    service = googlephotos.gphotos(service)
+    service = googlephotos.gphotos(service)      
 
-    name_array = dict(config.items("GOOGLE_ALBUMS"))
+    try:
+        try:
+            name_array = dict(config.items("GOOGLE_ALBUMS"))
+        except:
+            service.albumConfigWrite()
+            name_array = dict(config.items("GOOGLE_ALBUMS"))
+    except:
+        raise("Couldn't read or write GOOGLE_ALBUMS part of config file")
+
     if not os.path.exists("images.db"):
-        reinit("foo","bar")
+        reinit("foo","bar") #Since this is a room command it expects 2 (unused) variables 
 
     photo_help = photo_help_file_gen([x for x in name_array])
     help_file = help_file_gen(photo_help)
