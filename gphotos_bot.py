@@ -101,7 +101,7 @@ def weighted_image(names_given,text,room):
     names_given.sort()
     people_string = " % ".join(names_given)
     people_string = "% "+people_string+" %"
-    db_in = "images.db"
+    db_in = os.path.join(root_dir,"images.db")
     con = sqlite3.connect(db_in)
     print("Checking database...")
     c = con.cursor()
@@ -190,7 +190,10 @@ def reinit(room,event):
         print(albums)
         media_list = service.mediaFromAlbum(albums[1])
         googlephotos.SQLImageList(root_dir,media_list,albums[0])
-    room.send_text("Reinitialisation complete")
+    try:
+        room.send_text("Reinitialisation complete")
+    except:
+        pass
 
 def main():
     # Create an instance of the MatrixBotAPI
@@ -232,13 +235,16 @@ if __name__ == "__main__":
     try:
         try:
             name_array = dict(config.items("GOOGLE_ALBUMS"))
+            print("name array loaded")
         except:
             service.albumConfigWrite()
+            print("Writing GOOGLE_ALBUMS config file")
             name_array = dict(config.items("GOOGLE_ALBUMS"))
+            print("Config written")
     except:
         raise("Couldn't read or write GOOGLE_ALBUMS part of config file")
 
-    if not os.path.exists("images.db"):
+    if not os.path.exists(os.path.join(root_dir,"images.db")):
         reinit("foo","bar") #Since this is a room command it expects 2 (unused) variables 
 
     photo_help = photo_help_file_gen([x for x in name_array])

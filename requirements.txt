@@ -1,2 +1,6 @@
 matrix_client
 configparser
+oauth2client
+google-api-python-client
+wget
+httplib2
